@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "ELECTRON_EXEC_PATH",
+    "ELECTRON_OVERRIDE_DIST_PATH",
+    "ELECTRON_SKIP_BINARY_DOWNLOAD",
+    "ELECTRON_RENDERER_URL",
+    "FRAMEWORK_CAPTURE",
+    "FRAMEWORK_THEME",
+    "FRAMEWORK_VIEW",
+    "FRAMEWORK_TEST_DRAG"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "out/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
