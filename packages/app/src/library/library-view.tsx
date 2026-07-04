@@ -1,33 +1,34 @@
-import { useMemo, useState, type WheelEvent } from "react";
-import { Bookmark, Clock, LayoutGrid, List, Loader2, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bookmark, Inbox, LayoutGrid, List, Loader2, Search } from "lucide-react";
 import { cn } from "@framework/ui/lib/utils";
+import { scrollHorizontallyOnWheel } from "../components/horizontal-wheel";
 import {
   factCount,
   KIND_LABELS,
   type FileKind,
-  type ResourceFile,
+  type LibraryFile,
 } from "./data";
 import { KIND_ICONS, KindGlyph } from "./kind";
 
 const FILTERS: Array<{ id: FileKind | "all"; label: string }> = [
   { id: "all", label: "All" },
-  { id: "document", label: KIND_LABELS.document },
-  { id: "spreadsheet", label: KIND_LABELS.spreadsheet },
-  { id: "contract", label: KIND_LABELS.contract },
-  { id: "reference", label: KIND_LABELS.reference },
+  { id: "drawing", label: KIND_LABELS.drawing },
+  { id: "legal", label: KIND_LABELS.legal },
+  { id: "financial", label: KIND_LABELS.financial },
+  { id: "site", label: KIND_LABELS.site },
   { id: "report", label: KIND_LABELS.report },
-  { id: "media", label: KIND_LABELS.media },
+  { id: "photo", label: KIND_LABELS.photo },
 ];
 
-type ResourcesViewMode = "cards" | "list";
-const RESOURCE_VIEW_MODE_KEY = "framework:resources-view-mode";
+type LibraryViewMode = "cards" | "list";
+const LIBRARY_VIEW_MODE_KEY = "framework:library-view-mode";
 
-function getStoredViewMode(): ResourcesViewMode {
-  const stored = localStorage.getItem(RESOURCE_VIEW_MODE_KEY);
+function getStoredViewMode(): LibraryViewMode {
+  const stored = localStorage.getItem(LIBRARY_VIEW_MODE_KEY);
   return stored === "list" || stored === "cards" ? stored : "cards";
 }
 
-function StatusBadge({ file }: { file: ResourceFile }) {
+function StatusBadge({ file }: { file: LibraryFile }) {
   if (file.status === "processing") {
     return (
       <span className="flex items-center gap-1 text-xs text-stone-500 dark:text-stone-400">
@@ -36,11 +37,11 @@ function StatusBadge({ file }: { file: ResourceFile }) {
       </span>
     );
   }
-  if (file.status === "queued") {
+  if (file.status === "inbox") {
     return (
       <span className="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500">
-        <Clock className="size-3" strokeWidth={2} />
-        queued
+        <Inbox className="size-3" strokeWidth={2} />
+        inbox
       </span>
     );
   }
@@ -56,7 +57,7 @@ function FileRow({
   onOpen,
   onToggleContext,
 }: {
-  file: ResourceFile;
+  file: LibraryFile;
   onOpen: () => void;
   onToggleContext: () => void;
 }) {
@@ -103,7 +104,7 @@ function FileCard({
   onOpen,
   onToggleContext,
 }: {
-  file: ResourceFile;
+  file: LibraryFile;
   onOpen: () => void;
   onToggleContext: () => void;
 }) {
@@ -151,8 +152,8 @@ function FileCard({
             <Loader2 className="size-3 animate-spin" strokeWidth={2} />
             <span>extracting · {file.modified}</span>
           </>
-        ) : file.status === "queued" ? (
-          <span>queued · {file.size} · {file.modified}</span>
+        ) : file.status === "inbox" ? (
+          <span>inbox · {file.size} · {file.modified}</span>
         ) : (
           <span>
             <span className="font-medium text-stone-500 dark:text-stone-400">
@@ -167,24 +168,24 @@ function FileCard({
   );
 }
 
-export function ResourcesView({
+export function LibraryView({
   files,
   onOpenFile,
   onToggleContext,
 }: {
-  files: ResourceFile[];
-  onOpenFile: (file: ResourceFile) => void;
-  onToggleContext: (file: ResourceFile) => void;
+  files: LibraryFile[];
+  onOpenFile: (file: LibraryFile) => void;
+  onToggleContext: (file: LibraryFile) => void;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FileKind | "all">("all");
   const [viewMode, setViewMode] =
-    useState<ResourcesViewMode>(getStoredViewMode);
+    useState<LibraryViewMode>(getStoredViewMode);
   const [isFileListScrolled, setIsFileListScrolled] = useState(false);
 
-  const chooseViewMode = (mode: ResourcesViewMode) => {
+  const chooseViewMode = (mode: LibraryViewMode) => {
     setViewMode(mode);
-    localStorage.setItem(RESOURCE_VIEW_MODE_KEY, mode);
+    localStorage.setItem(LIBRARY_VIEW_MODE_KEY, mode);
   };
 
   const visible = useMemo(() => {
@@ -199,7 +200,7 @@ export function ResourcesView({
   }, [files, filter, query]);
 
   const groups = useMemo(() => {
-    const byProject = new Map<string, ResourceFile[]>();
+    const byProject = new Map<string, LibraryFile[]>();
     for (const file of visible) {
       const group = byProject.get(file.project) ?? [];
       group.push(file);
@@ -207,30 +208,6 @@ export function ResourcesView({
     }
     return [...byProject.entries()];
   }, [visible]);
-
-  const handleFilterWheel = (event: WheelEvent<HTMLDivElement>) => {
-    const scroller = event.currentTarget;
-    const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth;
-
-    if (maxScrollLeft <= 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-      return;
-    }
-
-    const delta =
-      event.deltaMode === 1
-        ? event.deltaY * 16
-        : event.deltaMode === 2
-          ? event.deltaY * scroller.clientWidth
-          : event.deltaY;
-    const nextScrollLeft = Math.max(
-      0,
-      Math.min(maxScrollLeft, scroller.scrollLeft + delta)
-    );
-
-    if (nextScrollLeft === scroller.scrollLeft) return;
-    event.preventDefault();
-    scroller.scrollLeft = nextScrollLeft;
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -254,7 +231,7 @@ export function ResourcesView({
         </label>
         <div className="flex items-center gap-2">
           <div
-            onWheel={handleFilterWheel}
+            onWheel={scrollHorizontallyOnWheel}
             className="flex min-w-0 flex-1 flex-nowrap gap-1 overflow-x-auto overscroll-x-contain pr-5 [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [scrollbar-width:none] [-webkit-mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [&::-webkit-scrollbar]:hidden"
           >
             {FILTERS.map((f) => (

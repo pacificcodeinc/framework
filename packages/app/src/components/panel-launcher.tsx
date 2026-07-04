@@ -1,50 +1,44 @@
 import type { LucideIcon } from "lucide-react";
-import { Activity, Clock, FileText, Zap } from "lucide-react";
+import { Inbox, Library, ListTodo, Zap } from "lucide-react";
 
-export type PlaceholderPanelId = "queue" | "runs" | "schedules";
+export type PlaceholderPanelId = "tasks" | "automations";
+
+export type LauncherItemId = "library" | "inbox" | PlaceholderPanelId;
 
 export const PLACEHOLDER_PANELS: Record<
   PlaceholderPanelId,
   { title: string; icon: LucideIcon; empty: string; hint: string }
 > = {
-  queue: {
-    title: "Queue",
-    icon: Clock,
-    empty: "No queued items",
-    hint: "Items waiting for review or extraction will land here.",
+  tasks: {
+    title: "Tasks",
+    icon: ListTodo,
+    empty: "No tasks yet",
+    hint: "Work Framework is running or waiting on will show up here.",
   },
-  runs: {
-    title: "Runs",
-    icon: Activity,
-    empty: "No runs yet",
-    hint: "Active and waiting background work will show up here.",
-  },
-  schedules: {
-    title: "Schedules",
+  automations: {
+    title: "Automations",
     icon: Zap,
-    empty: "No schedules yet",
+    empty: "No automations yet",
     hint: "Scheduled and recurring agent runs will live here.",
   },
 };
 
 export const LAUNCHER_ITEMS: Array<{
-  id: "resources" | PlaceholderPanelId;
+  id: LauncherItemId;
   label: string;
   icon: LucideIcon;
   shortcut?: string;
 }> = [
-  { id: "resources", label: "Resources", icon: FileText, shortcut: "Ctrl+P" },
-  { id: "queue", label: "Queue", icon: Clock },
-  { id: "runs", label: "Runs", icon: Activity },
-  { id: "schedules", label: "Schedules", icon: Zap },
+  { id: "library", label: "Library", icon: Library, shortcut: "Ctrl+P" },
+  { id: "inbox", label: "Inbox", icon: Inbox },
+  { id: "tasks", label: "Tasks", icon: ListTodo },
+  { id: "automations", label: "Automations", icon: Zap },
 ];
 
 export function PanelLauncher({
-  onOpenResources,
-  onOpenPlaceholder,
+  onOpenItem,
 }: {
-  onOpenResources: () => void;
-  onOpenPlaceholder: (id: PlaceholderPanelId) => void;
+  onOpenItem: (id: LauncherItemId) => void;
 }) {
   return (
     <div className="flex h-full items-center justify-center px-6">
@@ -53,11 +47,7 @@ export function PanelLauncher({
           <button
             key={item.id}
             type="button"
-            onClick={() =>
-              item.id === "resources"
-                ? onOpenResources()
-                : onOpenPlaceholder(item.id)
-            }
+            onClick={() => onOpenItem(item.id)}
             className="flex items-center gap-2.5 rounded-lg bg-stone-100/80 px-3 py-2.5 text-left text-[13px] text-stone-700 transition-colors hover:bg-stone-200/70 dark:bg-stone-800/50 dark:text-stone-200 dark:hover:bg-stone-800"
           >
             <item.icon

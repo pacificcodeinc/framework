@@ -1,6 +1,7 @@
 # Framework
 
-An agent harness for building domain-specific workflows.
+A desktop app framework for agentic workspaces, side panels, document context,
+and inbox-style review flows.
 
 ## Structure
 

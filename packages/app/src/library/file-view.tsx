@@ -1,6 +1,6 @@
 import { Bookmark, Loader2, MessageCircleQuestion, Sparkles } from "lucide-react";
 import { cn } from "@framework/ui/lib/utils";
-import { KIND_LABELS, type ResourceFile } from "./data";
+import { KIND_LABELS, type LibraryFile } from "./data";
 import { KindGlyph } from "./kind";
 
 function ConfidenceMeter({ value }: { value: number }) {
@@ -27,7 +27,7 @@ export function FileView({
   onToggleContext,
   onAskAbout,
 }: {
-  file: ResourceFile;
+  file: LibraryFile;
   onToggleContext: () => void;
   onAskAbout: () => void;
 }) {
@@ -108,14 +108,14 @@ export function FileView({
           </div>
         )}
 
-        {file.status === "queued" && (
+        {file.status === "inbox" && (
           <div className="mt-3 rounded-xl border border-stone-200/70 bg-white px-3 py-3 dark:border-stone-800 dark:bg-stone-900">
             <div className="text-[13px] text-stone-600 dark:text-stone-300">
               Not extracted yet.
             </div>
             <div className="mt-0.5 text-[12px] text-stone-400 dark:text-stone-500">
-              This file has not been read yet. Extraction will pull out the
-              facts worth knowing.
+              Framework hasn't read this file. Extraction will pull out the facts
+              worth knowing.
             </div>
             <button
               type="button"

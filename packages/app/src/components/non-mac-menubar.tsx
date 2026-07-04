@@ -17,7 +17,7 @@ type MenuGroup = {
   entries: MenuEntry[];
 };
 
-type FrameworkWindowControls = {
+type WindowControls = {
   minimize: () => Promise<void>;
   toggleMaximize: () => Promise<void>;
   close: () => Promise<void>;
@@ -131,9 +131,8 @@ export function NonMacMenubar({
 }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const windowControls = (
-    window as Window & { frameworkWindow?: FrameworkWindowControls }
-  ).frameworkWindow;
+  const windowControls = (window as Window & { frameworkWindow?: WindowControls })
+    .frameworkWindow;
 
   useEffect(() => {
     if (!openMenu) return;

@@ -1,12 +1,6 @@
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type WheelEvent,
-} from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { FileText, PanelRight, Plus, X } from "lucide-react";
+import { Inbox, Library, PanelRight, Plus, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,17 +8,23 @@ import {
   DropdownMenuTrigger,
 } from "@framework/ui/components/dropdown-menu";
 import { cn } from "@framework/ui/lib/utils";
-import type { ResourceFile } from "../resources/data";
-import { KIND_ICONS } from "../resources/kind";
+import type { LibraryFile } from "../library/data";
+import { KIND_ICONS } from "../library/kind";
+import type { InboxItem } from "../inbox/data";
+import { inboxItemIcon } from "../inbox/kind";
+import { scrollHorizontallyOnWheel } from "./horizontal-wheel";
 import {
   LAUNCHER_ITEMS,
   PLACEHOLDER_PANELS,
+  type LauncherItemId,
   type PlaceholderPanelId,
 } from "./panel-launcher";
 
 export type PanelTab =
-  | { id: "resources"; kind: "resources" }
-  | { id: string; kind: "file"; file: ResourceFile }
+  | { id: "library"; kind: "library" }
+  | { id: "inbox"; kind: "inbox" }
+  | { id: string; kind: "file"; file: LibraryFile }
+  | { id: string; kind: "message"; item: InboxItem }
   | { id: PlaceholderPanelId; kind: "placeholder" };
 
 export const SIDE_PANEL_MIN_WIDTH = 340;
@@ -40,18 +40,24 @@ const TEAR_DISTANCE = 36;
 const DRAG_THRESHOLD = 5;
 
 function tabTitle(tab: PanelTab): string {
-  if (tab.kind === "resources") return "Resources";
+  if (tab.kind === "library") return "Library";
+  if (tab.kind === "inbox") return "Inbox";
+  if (tab.kind === "message") return tab.item.subject;
   if (tab.kind === "placeholder") return PLACEHOLDER_PANELS[tab.id].title;
   return tab.file.name;
 }
 
 function TabIcon({ tab }: { tab: PanelTab }) {
   const Icon =
-    tab.kind === "resources"
-      ? FileText
-      : tab.kind === "placeholder"
-        ? PLACEHOLDER_PANELS[tab.id].icon
-        : KIND_ICONS[tab.file.kind];
+    tab.kind === "library"
+      ? Library
+      : tab.kind === "inbox"
+        ? Inbox
+        : tab.kind === "message"
+          ? inboxItemIcon(tab.item)
+          : tab.kind === "placeholder"
+            ? PLACEHOLDER_PANELS[tab.id].icon
+            : KIND_ICONS[tab.file.kind];
   return <Icon className="size-3.5 shrink-0 opacity-70" strokeWidth={1.75} />;
 }
 
@@ -61,16 +67,14 @@ function TabStrip({
   onSelectTab,
   onCloseTab,
   onReorderTab,
-  onOpenResources,
-  onOpenPlaceholder,
+  onOpenItem,
 }: {
   tabs: PanelTab[];
   activeTabId: string | null;
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
   onReorderTab: (id: string, toIndex: number) => void;
-  onOpenResources: () => void;
-  onOpenPlaceholder: (id: PlaceholderPanelId) => void;
+  onOpenItem: (id: LauncherItemId) => void;
 }) {
   const stripRef = useRef<HTMLDivElement>(null);
   const suppressClick = useRef(false);
@@ -106,30 +110,6 @@ function TabStrip({
     previousTabIdsRef.current = currentTabIds;
     if (openedTab) scrollToTabStripEnd();
   }, [scrollToTabStripEnd, tabs]);
-
-  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
-    const scroller = event.currentTarget;
-    const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth;
-
-    if (maxScrollLeft <= 0 || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-      return;
-    }
-
-    const delta =
-      event.deltaMode === 1
-        ? event.deltaY * 16
-        : event.deltaMode === 2
-          ? event.deltaY * scroller.clientWidth
-          : event.deltaY;
-    const nextScrollLeft = Math.max(
-      0,
-      Math.min(maxScrollLeft, scroller.scrollLeft + delta)
-    );
-
-    if (nextScrollLeft === scroller.scrollLeft) return;
-    event.preventDefault();
-    scroller.scrollLeft = nextScrollLeft;
-  };
 
   const onTabPointerDown = (
     event: React.PointerEvent<HTMLDivElement>,
@@ -323,7 +303,7 @@ function TabStrip({
   return (
     <div
       ref={stripRef}
-      onWheel={handleWheel}
+      onWheel={scrollHorizontallyOnWheel}
       className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overscroll-x-contain pr-5 [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [scrollbar-width:none] [-webkit-mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [&::-webkit-scrollbar]:hidden"
     >
       {tabs.map((tab) => {
@@ -380,14 +360,7 @@ function TabStrip({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {LAUNCHER_ITEMS.map((item) => (
-            <DropdownMenuItem
-              key={item.id}
-              onSelect={() =>
-                item.id === "resources"
-                  ? onOpenResources()
-                  : onOpenPlaceholder(item.id)
-              }
-            >
+            <DropdownMenuItem key={item.id} onSelect={() => onOpenItem(item.id)}>
               <item.icon
                 className="size-3.5 text-stone-500 dark:text-stone-400"
                 strokeWidth={1.75}
@@ -443,8 +416,7 @@ export function SidePanel({
   onReorderTab,
   onClosePanel,
   onOpenPanel,
-  onOpenResources,
-  onOpenPlaceholder,
+  onOpenItem,
   onResize,
   children,
 }: {
@@ -458,8 +430,7 @@ export function SidePanel({
   onReorderTab: (id: string, toIndex: number) => void;
   onClosePanel: () => void;
   onOpenPanel: () => void;
-  onOpenResources: () => void;
-  onOpenPlaceholder: (id: PlaceholderPanelId) => void;
+  onOpenItem: (id: LauncherItemId) => void;
   onResize: (ratio: number) => void;
   children: React.ReactNode;
 }) {
@@ -619,8 +590,7 @@ export function SidePanel({
               onSelectTab={onSelectTab}
               onCloseTab={onCloseTab}
               onReorderTab={onReorderTab}
-              onOpenResources={onOpenResources}
-              onOpenPlaceholder={onOpenPlaceholder}
+              onOpenItem={onOpenItem}
             />
           </div>
 

@@ -2,8 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import {
   ChevronRight,
   Clock,
-  FileText,
   Folder,
+  Library,
   NotepadText,
   Search,
   SquarePen,
@@ -37,7 +37,7 @@ export const EMPTY_SIDEBAR: SidebarData = {
 
 const NAV_ITEMS: { id: string; label: string; icon: LucideIcon }[] = [
   { id: "new-chat", label: "New chat", icon: SquarePen },
-  { id: "resources", label: "Resources", icon: FileText },
+  { id: "library", label: "Library", icon: Library },
   { id: "search", label: "Search", icon: Search },
   { id: "scheduled", label: "Scheduled", icon: Clock },
 ];
@@ -136,12 +136,12 @@ export function Sidebar({
   data = EMPTY_SIDEBAR,
   expanded = true,
   showRightBorder = true,
-  onOpenResources,
+  onOpenLibrary,
 }: {
   data?: SidebarData;
   expanded?: boolean;
   showRightBorder?: boolean;
-  onOpenResources?: () => void;
+  onOpenLibrary?: () => void;
 }) {
   return (
     <aside
@@ -167,7 +167,7 @@ export function Sidebar({
               key={item.id}
               label={item.label}
               icon={item.icon}
-              onClick={item.id === "resources" ? onOpenResources : undefined}
+              onClick={item.id === "library" ? onOpenLibrary : undefined}
             />
           ))}
         </nav>

@@ -2,21 +2,21 @@ import type { LucideIcon } from "lucide-react";
 import {
   Camera,
   FileText,
-  NotepadText,
+  Map,
+  PencilRuler,
   Scale,
-  Search,
   Table2,
 } from "lucide-react";
 import { cn } from "@framework/ui/lib/utils";
 import type { FileKind } from "./data";
 
 export const KIND_ICONS: Record<FileKind, LucideIcon> = {
-  document: NotepadText,
-  spreadsheet: Table2,
-  contract: Scale,
-  reference: Search,
+  drawing: PencilRuler,
+  legal: Scale,
+  financial: Table2,
+  site: Map,
   report: FileText,
-  media: Camera,
+  photo: Camera,
 };
 
 export function KindGlyph({

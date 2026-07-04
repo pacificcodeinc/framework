@@ -11,11 +11,13 @@ import {
 import {
   PanelLauncher,
   PlaceholderView,
-  type PlaceholderPanelId,
+  type LauncherItemId,
 } from "./components/panel-launcher";
-import { ResourcesView } from "./resources/resources-view";
-import { FileView } from "./resources/file-view";
-import { RESOURCE_FILES, type ResourceFile } from "./resources/data";
+import { LibraryView } from "./library/library-view";
+import { FileView } from "./library/file-view";
+import { LIBRARY_FILES, type LibraryFile } from "./library/data";
+import { InboxMessageView, InboxView } from "./inbox/inbox-view";
+import { INBOX_ITEMS, type InboxItem } from "./inbox/data";
 
 const PANEL_WIDTH_KEY = "framework:panel-width";
 const PANEL_WIDTH_RATIO_KEY = "framework:panel-width-ratio";
@@ -46,26 +48,45 @@ function initialTabs(): {
   active: string | null;
   open: boolean;
 } {
-  // Deep link for dev/screenshots: ?view=resources, ?view=file, or ?view=panel
+  // Deep link for dev/screenshots: ?view=library, ?view=file, ?view=inbox,
+  // ?view=message, or ?view=panel
   const view =
     typeof location !== "undefined"
       ? new URLSearchParams(location.search).get("view")
       : null;
-  if (view === "resources") {
+  if (view === "library") {
     return {
-      tabs: [{ id: "resources", kind: "resources" }],
-      active: "resources",
+      tabs: [{ id: "library", kind: "library" }],
+      active: "library",
       open: true,
     };
   }
   if (view === "file") {
-    const file = RESOURCE_FILES[0];
+    const file = LIBRARY_FILES[0];
     return {
       tabs: [
-        { id: "resources", kind: "resources" },
+        { id: "library", kind: "library" },
         { id: file.id, kind: "file", file },
       ],
       active: file.id,
+      open: true,
+    };
+  }
+  if (view === "inbox") {
+    return {
+      tabs: [{ id: "inbox", kind: "inbox" }],
+      active: "inbox",
+      open: true,
+    };
+  }
+  if (view === "message") {
+    const item = INBOX_ITEMS[0];
+    return {
+      tabs: [
+        { id: "inbox", kind: "inbox" },
+        { id: item.id, kind: "message", item },
+      ],
+      active: item.id,
       open: true,
     };
   }
@@ -78,7 +99,8 @@ function initialTabs(): {
 export function App() {
   const hasCustomChrome = !isMacPlatform();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [files, setFiles] = useState<ResourceFile[]>(RESOURCE_FILES);
+  const [files, setFiles] = useState<LibraryFile[]>(LIBRARY_FILES);
+  const [inboxItems, setInboxItems] = useState<InboxItem[]>(INBOX_ITEMS);
   const [{ tabs, active }, setPanel] = useState<{
     tabs: PanelTab[];
     active: string | null;
@@ -92,17 +114,17 @@ export function App() {
   const isSidebarVisible = !hasCustomChrome || isSidebarExpanded;
   const isChromeActive = isSidebarExpanded || isPanelOpen;
 
-  const openResources = () => {
+  const openLibrary = () => {
     setPanel(({ tabs }) => ({
-      tabs: tabs.some((t) => t.kind === "resources")
+      tabs: tabs.some((t) => t.kind === "library")
         ? tabs
-        : [{ id: "resources", kind: "resources" as const }, ...tabs],
-      active: "resources",
+        : [{ id: "library", kind: "library" as const }, ...tabs],
+      active: "library",
     }));
     setIsPanelOpen(true);
   };
 
-  const openFile = (file: ResourceFile) => {
+  const openFile = (file: LibraryFile) => {
     setPanel(({ tabs }) => ({
       tabs: tabs.some((t) => t.id === file.id)
         ? tabs
@@ -112,11 +134,20 @@ export function App() {
     setIsPanelOpen(true);
   };
 
-  const openPlaceholder = (id: PlaceholderPanelId) => {
+  const openPanelItem = (id: LauncherItemId) => {
+    if (id === "library") {
+      openLibrary();
+      return;
+    }
     setPanel(({ tabs }) => ({
       tabs: tabs.some((t) => t.id === id)
         ? tabs
-        : [...tabs, { id, kind: "placeholder" as const }],
+        : [
+            ...tabs,
+            id === "inbox"
+              ? { id, kind: "inbox" as const }
+              : { id, kind: "placeholder" as const },
+          ],
       active: id,
     }));
     setIsPanelOpen(true);
@@ -143,29 +174,66 @@ export function App() {
       return { tabs: next, active };
     });
 
-  const toggleContext = (file: ResourceFile) =>
+  const toggleContext = (file: LibraryFile) =>
     setFiles((current) =>
       current.map((f) =>
         f.id === file.id ? { ...f, inContext: !f.inContext } : f
       )
     );
 
-  // Keep file tabs in sync with the canonical file list.
+  const setInboxItemRead = (id: string, unread: boolean) =>
+    setInboxItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, unread } : item))
+    );
+
+  // Archiving also closes the message's tab if it's open.
+  const archiveInboxItem = (id: string) => {
+    setInboxItems((current) => current.filter((item) => item.id !== id));
+    closeTab(id);
+  };
+
+  const markAllInboxRead = () =>
+    setInboxItems((current) =>
+      current.map((item) => (item.unread ? { ...item, unread: false } : item))
+    );
+
+  const openInboxMessage = (item: InboxItem) => {
+    if (item.unread) setInboxItemRead(item.id, false);
+    setPanel(({ tabs }) => ({
+      tabs: tabs.some((t) => t.id === item.id)
+        ? tabs
+        : [...tabs, { id: item.id, kind: "message" as const, item }],
+      active: item.id,
+    }));
+    setIsPanelOpen(true);
+  };
+
+  const openFileById = (fileId: string) => {
+    const file = files.find((f) => f.id === fileId);
+    if (file) openFile(file);
+  };
+
+  // Keep file and message tabs in sync with their canonical lists.
   const syncedTabs = useMemo(
     () =>
       tabs.map((tab) =>
         tab.kind === "file"
           ? { ...tab, file: files.find((f) => f.id === tab.id) ?? tab.file }
-          : tab
+          : tab.kind === "message"
+            ? {
+                ...tab,
+                item: inboxItems.find((i) => i.id === tab.id) ?? tab.item,
+              }
+            : tab
       ),
-    [tabs, files]
+    [tabs, files, inboxItems]
   );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "p") {
         event.preventDefault();
-        openResources();
+        openLibrary();
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -194,7 +262,7 @@ export function App() {
           data={EMPTY_SIDEBAR}
           expanded={isSidebarVisible}
           showRightBorder={!hasCustomChrome}
-          onOpenResources={openResources}
+          onOpenLibrary={openLibrary}
         />
         <main
           className={cn(
@@ -224,25 +292,36 @@ export function App() {
             onReorderTab={reorderTab}
             onClosePanel={() => setIsPanelOpen(false)}
             onOpenPanel={() => setIsPanelOpen(true)}
-            onOpenResources={openResources}
-            onOpenPlaceholder={openPlaceholder}
+            onOpenItem={openPanelItem}
             onResize={(nextRatio) => {
               const clamped = clampPanelRatio(nextRatio);
               setPanelWidthRatio(clamped);
               localStorage.setItem(PANEL_WIDTH_RATIO_KEY, String(clamped));
             }}
           >
-            {!activeTab && (
-              <PanelLauncher
-                onOpenResources={openResources}
-                onOpenPlaceholder={openPlaceholder}
-              />
-            )}
+            {!activeTab && <PanelLauncher onOpenItem={openPanelItem} />}
             {activeTab?.kind === "placeholder" && (
               <PlaceholderView id={activeTab.id} />
             )}
-            {activeTab?.kind === "resources" && (
-              <ResourcesView
+            {activeTab?.kind === "inbox" && (
+              <InboxView
+                items={inboxItems}
+                onOpenItem={openInboxMessage}
+                onSetRead={setInboxItemRead}
+                onArchive={archiveInboxItem}
+                onMarkAllRead={markAllInboxRead}
+              />
+            )}
+            {activeTab?.kind === "message" && (
+              <InboxMessageView
+                item={activeTab.item}
+                onSetRead={setInboxItemRead}
+                onArchive={archiveInboxItem}
+                onOpenFile={openFileById}
+              />
+            )}
+            {activeTab?.kind === "library" && (
+              <LibraryView
                 files={files}
                 onOpenFile={openFile}
                 onToggleContext={toggleContext}

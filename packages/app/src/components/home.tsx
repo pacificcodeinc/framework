@@ -84,7 +84,7 @@ export function Home() {
           <Textarea
             ref={promptRef}
             onInput={syncPrompt}
-            placeholder="Describe a workflow, a dataset, or an interface"
+            placeholder="Describe a site, a deal, or a task"
             rows={2}
             className="max-h-64 min-h-[52px] overflow-y-auto px-4 pt-3.5 text-[15px] placeholder:text-stone-400 dark:placeholder:text-stone-500"
           />

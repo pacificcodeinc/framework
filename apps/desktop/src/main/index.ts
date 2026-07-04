@@ -167,7 +167,7 @@ function createWindow(): void {
     });
   }
 
-  // Dev affordance: FRAMEWORK_VIEW=resources|file deep-links the renderer into a
+  // Dev affordance: FRAMEWORK_VIEW=library|file|inbox deep-links the renderer into a
   // workspace view on launch (used for screenshots of non-default states).
   const initialView = process.env.FRAMEWORK_VIEW;
   if (process.env.ELECTRON_RENDERER_URL) {
