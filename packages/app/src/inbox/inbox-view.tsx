@@ -7,11 +7,10 @@ import {
   Inbox,
   Mail,
   MailOpen,
-  Search,
   X,
 } from "lucide-react";
 import { cn } from "@framework/ui/lib/utils";
-import { scrollHorizontallyOnWheel } from "../components/horizontal-wheel";
+import { FilterBar } from "../components/filter-bar";
 import {
   DAY_ORDER,
   unreadCount,
@@ -354,91 +353,65 @@ export function InboxView({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* Search + filters; search swaps for bulk actions while selecting */}
-      <div
-        className={cn(
-          "flex flex-col gap-2 border-b px-2 pt-1 pb-2 transition-colors",
-          isListScrolled
-            ? "border-stone-200/70 dark:border-stone-800"
-            : "border-transparent"
+      <FilterBar
+        query={query}
+        onQueryChange={setQuery}
+        placeholder="Search inbox"
+        isScrolled={isListScrolled}
+        filters={FILTERS.map((f) =>
+          f.id === "unread" && unread > 0
+            ? { ...f, label: `${f.label} · ${unread}` }
+            : f
         )}
-      >
-        {selectionActive ? (
-          <div className="flex h-8 items-center gap-1 rounded-lg border border-transparent bg-accent px-1 text-accent-foreground">
-            <button
-              type="button"
-              aria-label="Clear selection"
-              onClick={() => setSelectedIds(new Set())}
-              className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
-            >
-              <X className="size-3.5" strokeWidth={2} />
-            </button>
-            <span className="text-[13px] tabular-nums text-stone-600 dark:text-stone-300">
-              {selected.size} selected
-            </span>
-            <span className="flex-1" />
-            <button
-              type="button"
-              aria-label="Mark selected as read"
-              title="Mark as read"
-              onClick={() => bulkSetRead(false)}
-              className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
-            >
-              <MailOpen className="size-3.5" strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              aria-label="Mark selected as unread"
-              title="Mark as unread"
-              onClick={() => bulkSetRead(true)}
-              className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
-            >
-              <Mail className="size-3.5" strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              aria-label="Archive selected"
-              title="Archive"
-              onClick={bulkArchive}
-              className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
-            >
-              <Archive className="size-3.5" strokeWidth={1.75} />
-            </button>
-          </div>
-        ) : (
-          <label className="flex h-8 items-center gap-2 rounded-lg border border-transparent bg-accent px-2.5 text-accent-foreground focus-within:border-ring/40">
-            <Search className="size-3.5 shrink-0 opacity-55" strokeWidth={2} />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search inbox"
-              className="w-full bg-transparent text-[13px] text-inherit outline-none placeholder:text-muted-foreground"
-            />
-          </label>
-        )}
-        <div className="flex items-center gap-2">
-          <div
-            onWheel={scrollHorizontallyOnWheel}
-            className="flex min-w-0 flex-1 flex-nowrap gap-1 overflow-x-auto overscroll-x-contain pr-5 [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [scrollbar-width:none] [-webkit-mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [&::-webkit-scrollbar]:hidden"
-          >
-            {FILTERS.map((f) => (
+        activeFilter={filter}
+        onSelectFilter={setFilter}
+        searchSlot={
+          selectionActive ? (
+            <div className="flex h-8 items-center gap-1 rounded-lg border border-transparent bg-accent px-1 text-accent-foreground">
               <button
-                key={f.id}
                 type="button"
-                onClick={() => setFilter(f.id)}
-                className={cn(
-                  "shrink-0 rounded-md px-2.5 py-1 text-[12px] transition-colors",
-                  filter === f.id
-                    ? "text-stone-800 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-stone-800"
-                    : "text-stone-400 hover:bg-stone-100 hover:text-stone-500 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-400"
-                )}
+                aria-label="Clear selection"
+                onClick={() => setSelectedIds(new Set())}
+                className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
               >
-                {f.id === "unread" && unread > 0
-                  ? `${f.label} · ${unread}`
-                  : f.label}
+                <X className="size-3.5" strokeWidth={2} />
               </button>
-            ))}
-          </div>
-          {unread > 0 && (
+              <span className="text-[13px] tabular-nums text-stone-600 dark:text-stone-300">
+                {selected.size} selected
+              </span>
+              <span className="flex-1" />
+              <button
+                type="button"
+                aria-label="Mark selected as read"
+                title="Mark as read"
+                onClick={() => bulkSetRead(false)}
+                className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+              >
+                <MailOpen className="size-3.5" strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                aria-label="Mark selected as unread"
+                title="Mark as unread"
+                onClick={() => bulkSetRead(true)}
+                className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+              >
+                <Mail className="size-3.5" strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                aria-label="Archive selected"
+                title="Archive"
+                onClick={bulkArchive}
+                className="flex size-7 items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-200/70 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+              >
+                <Archive className="size-3.5" strokeWidth={1.75} />
+              </button>
+            </div>
+          ) : undefined
+        }
+        trailing={
+          unread > 0 ? (
             <button
               type="button"
               aria-label="Mark all as read"
@@ -448,9 +421,9 @@ export function InboxView({
             >
               <CheckCheck className="size-3.5" strokeWidth={1.75} />
             </button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* Messages grouped by day */}
       <div

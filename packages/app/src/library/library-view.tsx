@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Bookmark, Inbox, LayoutGrid, List, Loader2, Search } from "lucide-react";
+import { Bookmark, Inbox, LayoutGrid, List, Loader2 } from "lucide-react";
 import { cn } from "@framework/ui/lib/utils";
-import { scrollHorizontallyOnWheel } from "../components/horizontal-wheel";
+import { FilterBar } from "../components/filter-bar";
 import {
   factCount,
   KIND_LABELS,
@@ -211,72 +211,38 @@ export function LibraryView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Search + filters */}
-      <div
-        className={cn(
-          "flex flex-col gap-2 border-b px-2 pt-1 pb-2 transition-colors",
-          isFileListScrolled
-            ? "border-stone-200/70 dark:border-stone-800"
-            : "border-transparent"
-        )}
-      >
-        <label className="flex items-center gap-2 rounded-lg border border-transparent bg-accent px-2.5 py-1.5 text-accent-foreground focus-within:border-ring/40">
-          <Search className="size-3.5 shrink-0 opacity-55" strokeWidth={2} />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search files and projects"
-            className="w-full bg-transparent text-[13px] text-inherit outline-none placeholder:text-muted-foreground"
-          />
-        </label>
-        <div className="flex items-center gap-2">
-          <div
-            onWheel={scrollHorizontallyOnWheel}
-            className="flex min-w-0 flex-1 flex-nowrap gap-1 overflow-x-auto overscroll-x-contain pr-5 [mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [scrollbar-width:none] [-webkit-mask-image:linear-gradient(to_right,black_0,black_calc(100%-24px),transparent_100%)] [&::-webkit-scrollbar]:hidden"
-          >
-            {FILTERS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setFilter(f.id)}
-                className={cn(
-                  "shrink-0 rounded-md px-2.5 py-1 text-[12px] transition-colors",
-                  filter === f.id
-                    ? "text-stone-800 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-stone-800"
-                    : "text-stone-400 hover:bg-stone-100 hover:text-stone-500 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-400"
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex shrink-0 gap-0.5">
-            {[
-              { id: "cards" as const, label: "Cards", icon: LayoutGrid },
-              { id: "list" as const, label: "List", icon: List },
-            ].map((mode) => {
-              const Icon = mode.icon;
-              return (
-                <button
-                  key={mode.id}
-                  type="button"
-                  aria-label={mode.label}
-                  aria-pressed={viewMode === mode.id}
-                  onClick={() => chooseViewMode(mode.id)}
-                  className={cn(
-                    "flex size-6 items-center justify-center rounded-md transition-colors",
-                    viewMode === mode.id
-                      ? "text-stone-800 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-stone-800"
-                      : "text-stone-300 hover:bg-stone-100 hover:text-stone-500 dark:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-400"
-                  )}
-                >
-                  <Icon className="size-3.5" strokeWidth={1.75} />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <FilterBar
+        query={query}
+        onQueryChange={setQuery}
+        placeholder="Search files and projects"
+        isScrolled={isFileListScrolled}
+        filters={FILTERS}
+        activeFilter={filter}
+        onSelectFilter={setFilter}
+        trailing={[
+          { id: "cards" as const, label: "Cards", icon: LayoutGrid },
+          { id: "list" as const, label: "List", icon: List },
+        ].map((mode) => {
+          const Icon = mode.icon;
+          return (
+            <button
+              key={mode.id}
+              type="button"
+              aria-label={mode.label}
+              aria-pressed={viewMode === mode.id}
+              onClick={() => chooseViewMode(mode.id)}
+              className={cn(
+                "flex size-6 items-center justify-center rounded-md transition-colors",
+                viewMode === mode.id
+                  ? "text-stone-800 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-stone-800"
+                  : "text-stone-300 hover:bg-stone-100 hover:text-stone-500 dark:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-400"
+              )}
+            >
+              <Icon className="size-3.5" strokeWidth={1.75} />
+            </button>
+          );
+        })}
+      />
 
       {/* Grouped files */}
       <div
