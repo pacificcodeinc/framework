@@ -1,0 +1,72 @@
+Framework License
+
+Copyright (c) 2026 Kian McKenna, acting as an individual under the name
+Pacific Code.
+
+For purposes of this license, "Licensor" means Kian McKenna, acting as an
+individual under the name Pacific Code, and any future legal entity that is
+formed to own or operate Pacific Code and receives the rights to Framework.
+
+Framework is the base application framework developed by the Licensor. This
+license is intended to allow individuals and organizations, including private
+companies, to build private, internal, commercial, and proprietary products on
+top of Framework while preserving attribution to the Licensor for the
+underlying Framework code.
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of Framework and associated documentation files (the
+"Software"), to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following conditions:
+
+1. The above copyright notice, this permission notice, and the statement that
+   Framework was developed by the Licensor must be included in all copies or
+   substantial portions of the Software.
+
+2. By using, copying, modifying, embedding, extending, distributing, or building
+   on the Software, you acknowledge that Framework is the underlying base
+   application framework developed by the Licensor.
+
+3. Applications, services, and other works that use, link to, embed, extend, or
+   are built on top of the Software may be licensed under different terms,
+   including private or proprietary terms. Such works are not required to
+   disclose their source code solely because they use the Software.
+
+4. Open Source Exemption and High-Scale Private Use. If an application,
+   service, or other work that incorporates, embeds, extends, or is
+   substantially based on the Software is fully open source, no separate
+   written commercial license from the Licensor is required regardless of the
+   number of users. For purposes of this section, "fully open source" means
+   that the complete source code for that application, service, or other work
+   is made publicly available under an open source license that permits use,
+   copying, modification, and redistribution for any purpose.
+
+   If an application, service, or other work that incorporates, embeds, extends,
+   or is substantially based on the Software is private, internal, commercial,
+   proprietary, or otherwise not fully open source, it may use the Software
+   without charge and without a separate written commercial license unless and
+   until it exceeds 1,000,000 individual monthly active users in any calendar
+   month. After that threshold has been exceeded, continued use of the Software
+   for that application, service, or other work requires a separate written
+   commercial license from the Licensor. Use after exceeding the threshold
+   without such a license is outside the scope of this license.
+
+5. This license does not grant permission to use the names, trademarks, service
+   marks, or logos of Pacific Code or Framework except as necessary to preserve
+   the attribution notices required by this license.
+
+6. This license applies only to Framework. It does not apply to downstream
+   products, customer data, private application code, branding, domain-specific
+   corpora, or other materials unless those materials expressly say they are
+   licensed under this license.
+
+7. Nothing in this license limits the Licensor's right to use, modify, license,
+   sell, or distribute Framework or related works under other terms.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
